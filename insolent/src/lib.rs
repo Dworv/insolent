@@ -1,8 +1,13 @@
-use std::io::{Read, Write, BufReader};
+use std::io::{BufReader, Read, Write};
 
 pub trait Language {
     fn name(&self) -> &'static str;
-    fn interpret(&self, input: &mut BufReader<&mut dyn Read>, output: Box<&mut dyn Write>) -> Result<(), LanguageError>;
+    fn interpret(
+        &self,
+        input: &mut BufReader<&mut dyn Read>,
+        input: Box<&mut dyn Read>,
+        output: Box<&mut dyn Write>,
+    ) -> Result<(), LanguageError>;
 }
 
 #[derive(Debug)]
@@ -16,5 +21,5 @@ pub struct LanguageError {
 #[derive(Debug)]
 pub enum LanguageErrorKind {
     Syntax,
-    Runtime
+    Runtime,
 }
