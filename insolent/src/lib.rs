@@ -1,8 +1,8 @@
-use std::io::{Read, Write};
+use std::io::{Read, Write, BufReader};
 
 pub trait Language {
     fn name(&self) -> &'static str;
-    fn interpret(&self, input: dyn Read, flags: Vec<String>) -> Result<Box<dyn Write>, LanguageError>;
+    fn interpret(&self, input: &mut BufReader<&mut dyn Read>, output: Box<&mut dyn Write>) -> Result<(), LanguageError>;
 }
 
 #[derive(Debug)]
