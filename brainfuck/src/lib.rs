@@ -1,14 +1,25 @@
-pub fn add(left: usize, right: usize) -> usize {
-    left + right
-}
+mod interpreter;
 
-#[cfg(test)]
-mod tests {
-    use super::*;
+use std::io::{BufReader, Read, Write};
 
-    #[test]
-    fn it_works() {
-        let result = add(2, 2);
-        assert_eq!(result, 4);
+use utf8_chars::BufReadCharsExt;
+
+use insolent::{Language, LanguageError};
+use interpreter::interpret;
+
+pub struct Brainfuck;
+
+impl Language for Brainfuck {
+    fn name(&self) -> &'static str {
+        return "brainfuck";
+    }
+
+    fn interpret(
+        &self,
+        chars: &mut BufReader<&mut dyn Read>,
+        input: Box<&mut dyn Read>,
+        output: Box<&mut dyn Write>,
+    ) -> Result<(), LanguageError> {
+        interpret(chars.chars().map(|x| x.unwrap()), input, output)
     }
 }
