@@ -31,6 +31,23 @@ mod tests {
     use insolent::Language;
 
     use crate::Brainfuck;
+
+    #[test]
+    fn all_symbols_run() {
+        let mut code = &include_bytes!("test_code/all_symbols.b")[..];
+        Brainfuck.interpret(&mut BufReader::new(&mut code), Box::new(&mut empty()), Box::new(&mut sink())).unwrap();
+    }
+
+    #[test]
+    fn encoding_works() {
+        let mut code = &include_bytes!("test_code/encodings.b")[..];
+        let mut output = String::from("                    ");
+        Brainfuck.interpret(&mut BufReader::new(&mut code), Box::new(&mut empty()), Box::new(&mut unsafe { output.as_bytes_mut() })).unwrap();
+        assert_eq!(
+            output.trim_end().to_string(),
+            " !\"#$%&'()"
+        )
+    }
     
     #[test]
     fn hello_word_runs() {
