@@ -28,26 +28,11 @@ pub fn interpret<I: Iterator<Item = char>>(
     loop {
         if current_instruction == instruction_offset + instructions.len() {
             if let Some(c) = chars.next() {
-                let new_inst = match c {
-                    '+' => Instruction::Increment,
-                    '-' => Instruction::Decrement,
-                    '>' => Instruction::MoveRight,
-                    '<' => Instruction::MoveLeft,
-                    '.' => Instruction::Output,
-                    ',' => Instruction::Input,
-                    '[' => Instruction::OpenLoop,
-                    ']' => Instruction::CloseLoop,
-                    _ => {
-                        if c == '\n' {
-                            line += 1;
-                            col = 1;
-                        } else {
-                            col += 1;
-                        }
-                        continue;
-                    }
-                };
-                instructions.push(new_inst);
+                if let Some(inst) = read_instruction(c, &mut line, &mut col) {
+                    instructions.push(inst);
+                } else {
+                    continue;
+                }
             } else {
                 break;
             }
@@ -85,10 +70,9 @@ pub fn interpret<I: Iterator<Item = char>>(
                 pointer -= 1;
             }
             Instruction::Output => {
-                (*output).write(&[cells[pointer] as u8]).unwrap(); //TODO: encode
+                (*output).write(&[cells[pointer] as u8]).unwrap();
             }
             Instruction::Input => {
-                // TODO: decode
                 let mut buf = [0u8; 1];
                 (*input).read_exact(&mut buf).unwrap();
                 cells[pointer] = buf[0] as Cell;
@@ -97,32 +81,23 @@ pub fn interpret<I: Iterator<Item = char>>(
                 if cells[pointer] == 0 {
                     let mut loop_depth = 1;
                     while loop_depth > 0 {
-                        current_instruction += 1;
-                        if current_instruction == instruction_offset + instructions.len() {
-                            if let Some(c) = chars.next() {
-                                let new_inst = match c {
-                                    '[' => Instruction::OpenLoop,
-                                    ']' => Instruction::CloseLoop,
-                                    _ => continue,
-                                };
-                                instructions.push(new_inst);
+                        if let Some(c) = chars.next() {
+                            if let Some(inst) = read_instruction(c, &mut line, &mut col) {
+                                match inst {
+                                    Instruction::OpenLoop => loop_depth += 1,
+                                    Instruction::CloseLoop => loop_depth -= 1,
+                                    _ => {}
+                                }
                             } else {
-                                return Err(LanguageError {
-                                    kind: LanguageErrorKind::Syntax,
-                                    message: "Unmatched loop".to_string(),
-                                    line,
-                                    column: col,
-                                });
+                                continue;
                             }
-                        }
-                        match &instructions[current_instruction - instruction_offset] {
-                            Instruction::OpenLoop => {
-                                loop_depth += 1;
-                            }
-                            Instruction::CloseLoop => {
-                                loop_depth -= 1;
-                            }
-                            _ => {}
+                        } else {
+                            return Err(LanguageError {
+                                kind: LanguageErrorKind::Syntax,
+                                message: "Unmatched loop".to_string(),
+                                line,
+                                column: col,
+                            });
                         }
                     }
                 } else {
@@ -166,4 +141,25 @@ enum Instruction {
     Input,
     OpenLoop,
     CloseLoop,
+}
+
+fn read_instruction(c: char, line: &mut usize, col: &mut usize) -> Option<Instruction> {
+    *col += 1;
+    match c {
+        '+' => Some(Instruction::Increment),
+        '-' => Some(Instruction::Decrement),
+        '>' => Some(Instruction::MoveRight),
+        '<' => Some(Instruction::MoveLeft),
+        '.' => Some(Instruction::Output),
+        ',' => Some(Instruction::Input),
+        '[' => Some(Instruction::OpenLoop),
+        ']' => Some(Instruction::CloseLoop),
+        _ => {
+            if c == '\n' {
+                *line += 1;
+                *col = 1;
+            }
+            None
+        }
+    }
 }
