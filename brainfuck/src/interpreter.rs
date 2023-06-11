@@ -1,4 +1,4 @@
-use std::io::{Read, Write};
+use std::io::{Read, Write, ErrorKind::UnexpectedEof};
 
 use insolent::{LanguageError, LanguageErrorKind};
 
@@ -74,7 +74,21 @@ pub fn interpret<I: Iterator<Item = char>>(
             }
             Instruction::Input => {
                 let mut buf = [0u8; 1];
-                (*input).read_exact(&mut buf).unwrap();
+                match (*input).read_exact(&mut buf) {
+                    Ok(_) => {}
+                    Err(err) => {
+                        if err.kind() == UnexpectedEof {
+                            buf = [0];
+                        } else {
+                            return Err(LanguageError {
+                                kind: LanguageErrorKind::Runtime,
+                                message: "Failed to read input".to_string(),
+                                line,
+                                column: col,
+                            });
+                        }
+                    }
+                };
                 cells[pointer] = buf[0] as Cell;
             }
             Instruction::OpenLoop => {
