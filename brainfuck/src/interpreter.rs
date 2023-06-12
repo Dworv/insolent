@@ -1,8 +1,6 @@
 use std::io::{Read, Write, ErrorKind::UnexpectedEof};
 
 use insolent::{LanguageError, LanguageErrorKind};
-
-type Cell = u32;
 type CellAddress = usize;
 
 pub fn interpret<I: Iterator<Item = char>>(
@@ -10,10 +8,9 @@ pub fn interpret<I: Iterator<Item = char>>(
     input: Box<&mut dyn Read>,
     output: Box<&mut dyn Write>,
 ) -> Result<(), LanguageError> {
-    let num_cells = 10_000usize;
-    let cell_max = u8::MAX as Cell;
+    let num_cells = 30_000usize;
 
-    let mut cells: Vec<Cell> = vec![0];
+    let mut cells: Vec<u8> = vec![0];
     let mut pointer: CellAddress = 0;
 
     let mut instruction_offset = 0;
@@ -39,10 +36,10 @@ pub fn interpret<I: Iterator<Item = char>>(
         }
         match &instructions[current_instruction - instruction_offset] {
             Instruction::Increment => {
-                cells[pointer] = (cells[pointer] + 1) % cell_max;
+                cells[pointer] = cells[pointer].wrapping_add(1);
             }
             Instruction::Decrement => {
-                cells[pointer] = (cells[pointer] - 1) % cell_max;
+                cells[pointer] = cells[pointer].wrapping_sub(1);
             }
             Instruction::MoveRight => {
                 pointer += 1;
@@ -89,7 +86,7 @@ pub fn interpret<I: Iterator<Item = char>>(
                         }
                     }
                 };
-                cells[pointer] = buf[0] as Cell;
+                cells[pointer] = buf[0];
             }
             Instruction::OpenLoop => {
                 if cells[pointer] == 0 {
