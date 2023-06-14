@@ -13,28 +13,27 @@ pub fn interpret<I: Iterator<Item = char>>(
     let mut cells: Vec<u8> = vec![0];
     let mut pointer: CellAddress = 0;
 
-    let mut instruction_offset = 0;
-    let mut instructions: Vec<Instruction> = Vec::new();
-    let mut current_instruction = 0;
+    let mut start = 0;
+    let mut offset = 0;
+    let mut cache: Vec<(Instruction, usize, usize)> = Vec::new();
 
-    let mut loop_stack: Vec<usize> = vec![];
+    let mut loop_stack: Vec<LoopStart> = vec![];
 
     let mut line = 1;
     let mut col = 1;
 
     loop {
-        if current_instruction == instruction_offset + instructions.len() {
-            if let Some(c) = chars.next() {
-                if let Some(inst) = read_instruction(c, &mut line, &mut col) {
-                    instructions.push(inst);
-                } else {
-                    continue;
-                }
+        if offset == start + cache.len() {
+            if let Some(tup) = next_instruction(&mut chars) {
+                cache.push(tup);
             } else {
                 break;
             }
         }
-        match &instructions[current_instruction - instruction_offset] {
+        let (instruction, line_change, col_change) = &cache[offset - start];
+        line += line_change;
+        col += col_change;
+        match instruction {
             Instruction::Increment => {
                 cells[pointer] = cells[pointer].wrapping_add(1);
             }
@@ -92,27 +91,39 @@ pub fn interpret<I: Iterator<Item = char>>(
                 if cells[pointer] == 0 {
                     let mut loop_depth = 1;
                     while loop_depth > 0 {
-                        if let Some(c) = chars.next() {
-                            if let Some(inst) = read_instruction(c, &mut line, &mut col) {
-                                match inst {
-                                    Instruction::OpenLoop => loop_depth += 1,
-                                    Instruction::CloseLoop => loop_depth -= 1,
-                                    _ => {}
-                                }
+                        if offset == start + cache.len() {
+                            if let Some(tup) = next_instruction(&mut chars) {
+                                cache.push(tup);
                             } else {
-                                continue;
+                                return Err(LanguageError {
+                                    kind: LanguageErrorKind::Syntax,
+                                    message: "Unmatched loop".to_string(),
+                                    line,
+                                    column: col,
+                                });
                             }
-                        } else {
-                            return Err(LanguageError {
-                                kind: LanguageErrorKind::Syntax,
-                                message: "Unmatched loop".to_string(),
-                                line,
-                                column: col,
-                            });
+                        }
+                        let (instruction, line_change, col_change) = &cache[offset - start];
+                        line += line_change;
+                        col += col_change;
+                        match instruction {
+                            Instruction::OpenLoop => {
+                                loop_depth += 1;
+                            }
+                            Instruction::CloseLoop => {
+                                loop_depth -= 1;
+                            }
+                            _ => {}
                         }
                     }
                 } else {
-                    loop_stack.push(current_instruction);
+                    loop_stack.push(
+                        LoopStart {
+                            offset,
+                            line,
+                            col
+                        }
+                    );
                 }
             }
             Instruction::CloseLoop => {
@@ -125,17 +136,20 @@ pub fn interpret<I: Iterator<Item = char>>(
                     });
                 }
                 if cells[pointer] != 0 {
-                    current_instruction = loop_stack[loop_stack.len() - 1];
+                    let LoopStart { offset: start_offset, line: start_line, col: start_col } = loop_stack[loop_stack.len() - 1];
+                    offset = start_offset;
+                    line = start_line;
+                    col = start_col;
                 } else {
                     loop_stack.pop();
                 }
             }
         }
-        current_instruction += 1;
+        offset += 1;
         if loop_stack.len() == 0 {
-            instruction_offset = current_instruction;
-            instructions.clear();
-            instructions.shrink_to_fit();
+            start = offset;
+            cache.clear();
+            cache.shrink_to_fit();
         }
     }
 
@@ -154,23 +168,35 @@ enum Instruction {
     CloseLoop,
 }
 
-fn read_instruction(c: char, line: &mut usize, col: &mut usize) -> Option<Instruction> {
-    *col += 1;
-    match c {
-        '+' => Some(Instruction::Increment),
-        '-' => Some(Instruction::Decrement),
-        '>' => Some(Instruction::MoveRight),
-        '<' => Some(Instruction::MoveLeft),
-        '.' => Some(Instruction::Output),
-        ',' => Some(Instruction::Input),
-        '[' => Some(Instruction::OpenLoop),
-        ']' => Some(Instruction::CloseLoop),
-        _ => {
-            if c == '\n' {
-                *line += 1;
-                *col = 1;
+fn next_instruction<I: Iterator<Item = char>>(chars: &mut I) -> Option<(Instruction, usize, usize)> {
+    let mut line = 0usize;
+    let mut col = 1usize;
+    for c in chars {
+        return Some((match c {
+            '+' => Instruction::Increment,
+            '-' => Instruction::Decrement,
+            '>' => Instruction::MoveRight,
+            '<' => Instruction::MoveLeft,
+            '.' => Instruction::Output,
+            ',' => Instruction::Input,
+            '[' => Instruction::OpenLoop,
+            ']' => Instruction::CloseLoop,
+            '\n' => {
+                line += 1;
+                col = 1;
+                continue;
             }
-            None
-        }
+            _ => {
+                col += 1;
+                continue;
+            }
+        }, line, col))
     }
+    return None;
+}
+
+struct LoopStart {
+    offset: usize,
+    line: usize,
+    col: usize
 }
