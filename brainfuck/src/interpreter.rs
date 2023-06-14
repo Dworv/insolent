@@ -31,8 +31,12 @@ pub fn interpret<I: Iterator<Item = char>>(
             }
         }
         let (instruction, line_change, col_change) = &cache[offset - start];
-        line += line_change;
-        col += col_change;
+        if line_change > &0 {
+            line += line_change;
+            col = *col_change;
+        } else {
+            col += col_change;
+        }
         match instruction {
             Instruction::Increment => {
                 cells[pointer] = cells[pointer].wrapping_add(1);
@@ -91,6 +95,7 @@ pub fn interpret<I: Iterator<Item = char>>(
                 if cells[pointer] == 0 {
                     let mut loop_depth = 1;
                     while loop_depth > 0 {
+                        offset += 1;
                         if offset == start + cache.len() {
                             if let Some(tup) = next_instruction(&mut chars) {
                                 cache.push(tup);
@@ -156,8 +161,8 @@ pub fn interpret<I: Iterator<Item = char>>(
     Ok(())
 }
 
+#[derive(Debug)]
 enum Instruction {
-    // instructions
     Increment,
     Decrement,
     MoveRight,
