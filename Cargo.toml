@@ -2,5 +2,6 @@
 members = [
     "brainfuck",
     "cli",
+    "fish",
     "insolent"
 ]
