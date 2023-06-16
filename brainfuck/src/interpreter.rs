@@ -40,9 +40,11 @@ pub fn interpret<I: Iterator<Item = char>>(
         match instruction {
             Instruction::Increment => {
                 cells[pointer] = cells[pointer].wrapping_add(1);
+                println!("Incremented cell at {} to {}", pointer, cells[pointer]);
             }
             Instruction::Decrement => {
                 cells[pointer] = cells[pointer].wrapping_sub(1);
+                println!("Decremented cell at {} to {}", pointer, cells[pointer]);
             }
             Instruction::MoveRight => {
                 pointer += 1;
@@ -57,6 +59,7 @@ pub fn interpret<I: Iterator<Item = char>>(
                 if pointer >= cells.len() {
                     cells.push(0);
                 }
+                println!("Moved right to cell {}", pointer);
             }
             Instruction::MoveLeft => {
                 if pointer == 0 {
@@ -68,6 +71,7 @@ pub fn interpret<I: Iterator<Item = char>>(
                     });
                 }
                 pointer -= 1;
+                println!("Moved left to cell {}", pointer);
             }
             Instruction::Output => {
                 (*output).write(&[cells[pointer] as u8]).unwrap();
@@ -121,6 +125,7 @@ pub fn interpret<I: Iterator<Item = char>>(
                             _ => {}
                         }
                     }
+                    println!("Skipped loop")
                 } else {
                     loop_stack.push(
                         LoopStart {
@@ -129,6 +134,7 @@ pub fn interpret<I: Iterator<Item = char>>(
                             col
                         }
                     );
+                    println!("Entered loop")
                 }
             }
             Instruction::CloseLoop => {
@@ -148,6 +154,7 @@ pub fn interpret<I: Iterator<Item = char>>(
                 } else {
                     loop_stack.pop();
                 }
+                println!("Exited loop")
             }
         }
         offset += 1;

@@ -76,3 +76,52 @@ fn first_loop_comments_ignored() {
         "#"
     )
 }
+
+#[test]
+fn inputs_work() {
+    let mut code = &include_bytes!("input.b")[..];
+    let input = String::from("a");
+    let mut output = String::from(" ");
+    Brainfuck.interpret(&mut BufReader::new(&mut code), Box::new(&mut input.as_bytes()), Box::new(&mut unsafe { output.as_bytes_mut() })).unwrap();
+    assert_eq!(
+        output.trim().to_string(),
+        "a"
+    )
+}
+
+#[test]
+fn check_even_digit_4() {
+    let mut code = &include_bytes!("check_even_digit.b")[..];
+    let input = String::from("4");
+    let mut output = String::from(" ");
+    Brainfuck.interpret(&mut BufReader::new(&mut code), Box::new(&mut input.as_bytes()), Box::new(&mut unsafe { output.as_bytes_mut() })).unwrap();
+    assert_eq!(
+        output.trim().to_string(),
+        "4"
+    )
+}
+
+#[test]
+fn check_even_digit_8() {
+    let mut code = &include_bytes!("check_even_digit.b")[..];
+    let input = String::from("8");
+    let mut output = String::from(" ");
+    Brainfuck.interpret(&mut BufReader::new(&mut code), Box::new(&mut input.as_bytes()), Box::new(&mut unsafe { output.as_bytes_mut() })).unwrap();
+    assert_eq!(
+        output.trim().to_string(),
+        "8"
+    )
+}
+
+#[test]
+fn check_even_digit_odd() {
+    let mut code = &include_bytes!("check_even_digit.b")[..];
+    let input = String::from("3");
+    let mut output = String::from("");
+    Brainfuck.interpret(&mut BufReader::new(&mut code), Box::new(&mut input.as_bytes()), Box::new(&mut unsafe { output.as_bytes_mut() })).unwrap();
+    assert_eq!(
+        output.trim().to_string(),
+        ""
+    )
+}
+
