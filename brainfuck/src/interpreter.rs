@@ -161,8 +161,8 @@ pub fn interpret<I: Iterator<Item = char>>(
     Ok(())
 }
 
-#[derive(Debug)]
-enum Instruction {
+#[derive(Debug, PartialEq, Eq)]
+pub(crate) enum Instruction {
     Increment,
     Decrement,
     MoveRight,
@@ -173,7 +173,7 @@ enum Instruction {
     CloseLoop,
 }
 
-fn next_instruction<I: Iterator<Item = char>>(chars: &mut I) -> Option<(Instruction, usize, usize)> {
+pub(crate) fn next_instruction<I: Iterator<Item = char>>(chars: &mut I) -> Option<(Instruction, usize, usize)> {
     let mut line = 0usize;
     let mut col = 1usize;
     for c in chars {

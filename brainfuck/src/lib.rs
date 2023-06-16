@@ -7,6 +7,9 @@ use utf8_chars::BufReadCharsExt;
 use insolent::{Language, LanguageError};
 use interpreter::interpret;
 
+#[cfg(test)]
+mod tests;
+
 pub struct Brainfuck;
 
 impl Language for Brainfuck {
