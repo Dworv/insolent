@@ -1,7 +1,7 @@
 # insolent
 Interpreter for esotoric programming languages
 
-- [ ] Brainfuck
+- [x] Brainfuck
 - [ ] Fish
 
 More languages to be planned
