@@ -1,4 +1,4 @@
-use std::io::{Read, Write, ErrorKind::UnexpectedEof};
+use std::io::{ErrorKind::UnexpectedEof, Read, Write};
 
 use insolent::{LanguageError, LanguageErrorKind};
 

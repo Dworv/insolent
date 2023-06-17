@@ -1,4 +1,4 @@
-use std::io::{Read, Write, ErrorKind::UnexpectedEof};
+use std::io::{ErrorKind::UnexpectedEof, Read, Write};
 
 use insolent::{LanguageError, LanguageErrorKind};
 type CellAddress = usize;
@@ -127,13 +127,7 @@ pub fn interpret<I: Iterator<Item = char>>(
                     }
                     println!("Skipped loop")
                 } else {
-                    loop_stack.push(
-                        LoopStart {
-                            offset,
-                            line,
-                            col
-                        }
-                    );
+                    loop_stack.push(LoopStart { offset, line, col });
                     println!("Entered loop")
                 }
             }
@@ -147,7 +141,11 @@ pub fn interpret<I: Iterator<Item = char>>(
                     });
                 }
                 if cells[pointer] != 0 {
-                    let LoopStart { offset: start_offset, line: start_line, col: start_col } = loop_stack[loop_stack.len() - 1];
+                    let LoopStart {
+                        offset: start_offset,
+                        line: start_line,
+                        col: start_col,
+                    } = loop_stack[loop_stack.len() - 1];
                     offset = start_offset;
                     line = start_line;
                     col = start_col;
@@ -180,29 +178,35 @@ pub(crate) enum Instruction {
     CloseLoop,
 }
 
-pub(crate) fn next_instruction<I: Iterator<Item = char>>(chars: &mut I) -> Option<(Instruction, usize, usize)> {
+pub(crate) fn next_instruction<I: Iterator<Item = char>>(
+    chars: &mut I,
+) -> Option<(Instruction, usize, usize)> {
     let mut line = 0usize;
     let mut col = 1usize;
     for c in chars {
-        return Some((match c {
-            '+' => Instruction::Increment,
-            '-' => Instruction::Decrement,
-            '>' => Instruction::MoveRight,
-            '<' => Instruction::MoveLeft,
-            '.' => Instruction::Output,
-            ',' => Instruction::Input,
-            '[' => Instruction::OpenLoop,
-            ']' => Instruction::CloseLoop,
-            '\n' => {
-                line += 1;
-                col = 1;
-                continue;
-            }
-            _ => {
-                col += 1;
-                continue;
-            }
-        }, line, col))
+        return Some((
+            match c {
+                '+' => Instruction::Increment,
+                '-' => Instruction::Decrement,
+                '>' => Instruction::MoveRight,
+                '<' => Instruction::MoveLeft,
+                '.' => Instruction::Output,
+                ',' => Instruction::Input,
+                '[' => Instruction::OpenLoop,
+                ']' => Instruction::CloseLoop,
+                '\n' => {
+                    line += 1;
+                    col = 1;
+                    continue;
+                }
+                _ => {
+                    col += 1;
+                    continue;
+                }
+            },
+            line,
+            col,
+        ));
     }
     return None;
 }
@@ -210,5 +214,5 @@ pub(crate) fn next_instruction<I: Iterator<Item = char>>(chars: &mut I) -> Optio
 struct LoopStart {
     offset: usize,
     line: usize,
-    col: usize
+    col: usize,
 }
