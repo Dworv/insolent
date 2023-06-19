@@ -31,7 +31,7 @@ pub fn interpret<I: Iterator<Item = char>>(
             }
         }
         let (instruction, line_change, col_change) = &cache[offset - start];
-        if line_change > &0 {
+        if *line_change > 0 {
             line += line_change;
             col = *col_change;
         } else {
@@ -109,8 +109,12 @@ pub fn interpret<I: Iterator<Item = char>>(
                             }
                         }
                         let (instruction, line_change, col_change) = &cache[offset - start];
-                        line += line_change;
-                        col += col_change;
+                        if *line_change > 0 {
+                            line += line_change;
+                            col = *col_change;
+                        } else {
+                            col += col_change;
+                        }
                         match instruction {
                             Instruction::OpenLoop => {
                                 loop_depth += 1;
