@@ -1,7 +1,7 @@
 use std::io::{empty, sink, BufReader};
 
 use brainfuck::Brainfuck;
-use insolent::Language;
+use insolent::{Language, LanguageError, LanguageErrorKind};
 
 #[test]
 fn print_grad() {
@@ -167,4 +167,24 @@ fn check_even_digit_odd() {
         )
         .unwrap();
     assert_eq!(output.trim().to_string(), "")
+}
+
+#[test]
+fn error_reports_correctly() {
+    let mut code = &include_bytes!("hello_world.b")[..];
+    assert_eq!(
+        Brainfuck
+            .interpret(
+                &mut BufReader::new(&mut code),
+                Box::new(&mut empty()),
+                Box::new(&mut sink()),
+            )
+            .unwrap_err(),
+        LanguageError {
+            kind: LanguageErrorKind::Syntax,
+            message: "Unmatched loop".to_string(),
+            line: 5,
+            column: 5
+        }
+    )
 }

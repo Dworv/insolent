@@ -10,7 +10,7 @@ pub trait Language {
     ) -> Result<(), LanguageError>;
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub struct LanguageError {
     pub kind: LanguageErrorKind,
     pub message: String,
@@ -18,7 +18,7 @@ pub struct LanguageError {
     pub column: usize,
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub enum LanguageErrorKind {
     Syntax,
     Runtime,
