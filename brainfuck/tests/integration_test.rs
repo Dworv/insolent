@@ -171,7 +171,7 @@ fn check_even_digit_odd() {
 
 #[test]
 fn error_reports_correctly() {
-    let mut code = &include_bytes!("hello_world.b")[..];
+    let mut code = &include_bytes!("unmatched_loop.b")[..];
     assert_eq!(
         Brainfuck
             .interpret(
