@@ -1,8 +1,11 @@
+mod grid;
 mod interpreter;
 
 use std::io::{BufReader, Read, Write};
 
 use utf8_chars::BufReadCharsExt;
+
+pub(crate) use grid::Grid;
 
 use insolent::{Language, LanguageError};
 use interpreter::interpret;
@@ -20,6 +23,10 @@ impl Language for Fish {
         input: Box<&mut dyn Read>,
         output: Box<&mut dyn Write>,
     ) -> Result<(), LanguageError> {
-        interpret(chars.chars().map(|x| x.unwrap()), input, output)
+        interpret(
+            chars,
+            input,
+            output
+        )
     }
 }
